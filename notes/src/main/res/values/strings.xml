@@ -5,4 +5,5 @@
     <string name="enter_folder_name">enter folder name</string>
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
+    <string name="header">Header:</string>
 </resources>

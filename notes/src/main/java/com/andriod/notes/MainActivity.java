@@ -5,12 +5,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
-import android.widget.Toast;
 
 import com.andriod.notes.entity.Note;
 import com.andriod.notes.fragment.Controller;
 import com.andriod.notes.fragment.FolderAddNewFragment;
 import com.andriod.notes.fragment.FolderFragment;
+import com.andriod.notes.fragment.ListNotesFragment;
+import com.andriod.notes.fragment.NoteCreateFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,7 @@ public class MainActivity extends AppCompatActivity implements Controller {
     private List<String> folders = new ArrayList<>();
     private List<Note> notes = new ArrayList<>();
     private String currentFolder;
+    private List<Note> currentFolderNotes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,8 +50,20 @@ public class MainActivity extends AppCompatActivity implements Controller {
     @Override
     public void folderPicked(int index) {
         Log.d(TAG, "folderPicked() called with: index = [" + index + "]");
-        currentFolder = getFolder(index);
-        Toast.makeText(this, String.format("Folder picked: %s", currentFolder), Toast.LENGTH_SHORT).show();
+        String pickedFolder = getFolder(index);
+        if (!pickedFolder.equals(currentFolder)) {
+            currentFolder = pickedFolder;
+            currentFolderNotes = new ArrayList<>();
+            for (Note note : notes) {
+                if (note.getFolder().equals(currentFolder)) currentFolderNotes.add(note);
+            }
+        }
+
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.container, ListNotesFragment.newInstance(currentFolder))
+                .addToBackStack(null)
+                .commit();
     }
 
     @Override
@@ -75,7 +89,22 @@ public class MainActivity extends AppCompatActivity implements Controller {
     }
 
     @Override
+    public void notePicked(int index) {
+        Log.d(TAG, String.format("notePicked(): index = %d header = %s", index, currentFolderNotes.get(index).getHeader()));
+//        currentFolderNotes.get(index);
+    }
+
+    @Override
+    public void noteAddNew(String folder) {
+        Log.d(TAG, String.format("noteAddNew() folder = %s", folder));
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         return super.onCreateOptionsMenu(menu);
+    }
+
+    public List<Note> getNotesInFolder(String folder) {
+        return currentFolderNotes;
     }
 }
