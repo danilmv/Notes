@@ -97,6 +97,16 @@ public class MainActivity extends AppCompatActivity implements Controller {
     @Override
     public void noteAddNew(String folder) {
         Log.d(TAG, String.format("noteAddNew() folder = %s", folder));
+
+        Note newNote = new Note(null, "123123", folder);
+        notes.add(newNote);
+        currentFolderNotes.add(newNote);
+
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.container, NoteCreateFragment.newInstance(newNote))
+                .addToBackStack(null)
+                .commit();
     }
 
     @Override

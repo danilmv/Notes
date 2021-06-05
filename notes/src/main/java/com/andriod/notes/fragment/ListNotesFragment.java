@@ -71,6 +71,8 @@ public class ListNotesFragment extends Fragment {
 
         listContainer = view.findViewById(R.id.list_container);
         for (int i = 0; i < notes.size(); i++) {
+            if (notes.get(i).getHeader().isEmpty())continue;
+
             TextView textView = new TextView(getContext());
             textView.setText(notes.get(i).getHeader());
             final int index = i;
