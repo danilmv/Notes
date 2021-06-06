@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 
 import com.andriod.notes.entity.Note;
 import com.andriod.notes.fragment.Controller;
@@ -13,6 +14,7 @@ import com.andriod.notes.fragment.FolderAddNewFragment;
 import com.andriod.notes.fragment.FolderFragment;
 import com.andriod.notes.fragment.ListNotesFragment;
 import com.andriod.notes.fragment.NoteCreateFragment;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -22,6 +24,7 @@ public class MainActivity extends AppCompatActivity implements Controller {
 
     private static final String TAG = "@MainActivity@";
     private static final String SAVE_DATA = "data";
+    public static final String FAVORITES = "FAVORITES\n##";
 
     private static class ApplicationData {
         private final List<String> folders = new ArrayList<>();
@@ -34,6 +37,8 @@ public class MainActivity extends AppCompatActivity implements Controller {
 
     private final Gson gson = new Gson();
 
+    private BottomNavigationView bottomNavigationView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,10 +50,47 @@ public class MainActivity extends AppCompatActivity implements Controller {
             restoreData(savedInstanceState);
         }
 
+        bottomNavigationView = findViewById(R.id.bottom_view);
+        bottomNavigationView.getMenu().findItem(R.id.menu_bottom_item_settings).setEnabled(false);
+
+        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+
+            if (itemId == R.id.menu_bottom_item_list) {
+                showFoldersFragment();
+            } else if (itemId == R.id.menu_bottom_item_favorites) {
+                showFolderContent(FAVORITES);
+            } else if (itemId == R.id.menu_bottom_item_settings) {
+                showSettings();
+            } else {
+                return false;
+            }
+            return true;
+        });
+
+        showFoldersFragment();
+    }
+
+    private void showSettings() {
+    }
+
+    private void setBottomMenu(int checkedId) {
+        Menu menu = bottomNavigationView.getMenu();
+        menu.setGroupCheckable(0, true, false);
+        for (int i = 0; i < menu.size(); i++) {
+            MenuItem item = menu.getItem(i);
+            item.setChecked(item.getItemId() == checkedId);
+        }
+        menu.setGroupCheckable(0, true, true);
+    }
+
+    private void showFoldersFragment() {
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.container, new FolderFragment())
                 .commit();
+
+        setBottomMenu(R.id.menu_bottom_item_list);
     }
 
     public int getFolderSize() {
@@ -66,12 +108,20 @@ public class MainActivity extends AppCompatActivity implements Controller {
     @Override
     public void folderPicked(int index) {
         Log.d(TAG, "folderPicked() called with: index = [" + index + "]");
-        String pickedFolder = getFolder(index);
+        showFolderContent(getFolder(index));
+    }
+
+    private void showFolderContent(String pickedFolder) {
         if (!pickedFolder.equals(data.currentFolder)) {
             data.currentFolder = pickedFolder;
             data.currentFolderNotes = new ArrayList<>();
             for (Note note : data.notes) {
-                if (note.getFolder().equals(data.currentFolder)) data.currentFolderNotes.add(note);
+                if (pickedFolder.equals(FAVORITES)) {
+                    if (note.isFavorite()) data.currentFolderNotes.add(note);
+                } else {
+                    if (note.getFolder().equals(data.currentFolder))
+                        data.currentFolderNotes.add(note);
+                }
             }
         }
 
@@ -80,6 +130,8 @@ public class MainActivity extends AppCompatActivity implements Controller {
                 .replace(R.id.container, ListNotesFragment.newInstance(data.currentFolder))
                 .addToBackStack(null)
                 .commit();
+
+        setBottomMenu(pickedFolder.equals(FAVORITES) ? R.id.menu_bottom_item_favorites : -1);
     }
 
     @Override
@@ -98,10 +150,7 @@ public class MainActivity extends AppCompatActivity implements Controller {
             Log.d(TAG, String.format("folderAddNewResult() new folder added: %s", newFolderName));
         }
         Log.d(TAG, "folderAddNewResult() back to FolderFragment...");
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.container, new FolderFragment())
-                .commit();
+        showFoldersFragment();
     }
 
     @Override
@@ -115,6 +164,7 @@ public class MainActivity extends AppCompatActivity implements Controller {
         Log.d(TAG, String.format("noteAddNew() folder = %s", folder));
 
         Note newNote = new Note(null, "123123", folder);
+        newNote.setFavorite(true);
         data.notes.add(newNote);
         data.currentFolderNotes.add(newNote);
 

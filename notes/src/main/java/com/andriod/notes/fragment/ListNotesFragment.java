@@ -42,10 +42,11 @@ public class ListNotesFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
 
         Bundle fragmentData = getArguments();
         if (fragmentData != null) this.folderName = fragmentData.getString(FOLDER_NAME_KEY);
+
+        setHasOptionsMenu(!folderName.equals(MainActivity.FAVORITES));
     }
 
     @Override
@@ -65,13 +66,13 @@ public class ListNotesFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         TextView textViewFolderName = view.findViewById(R.id.text_view_folder_name);
-        textViewFolderName.setText(folderName);
+        textViewFolderName.setText(folderName.equals(MainActivity.FAVORITES) ? getString(R.string.favorites_folder_title) : folderName);
 
         List<Note> notes = mainActivity.getNotesInFolder(folderName);
 
         listContainer = view.findViewById(R.id.list_container);
         for (int i = 0; i < notes.size(); i++) {
-            if (notes.get(i).getHeader().isEmpty())continue;
+            if (notes.get(i).getHeader().isEmpty()) continue;
 
             TextView textView = new TextView(getContext());
             textView.setText(notes.get(i).getHeader());
