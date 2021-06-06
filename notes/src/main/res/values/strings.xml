@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Notes</string>
+    <string name="folders_title">Folders</string>
+    <string name="create_new_folder">Create new folder</string>
+    <string name="enter_folder_name">enter folder name</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="header">Header:</string>
 </resources>

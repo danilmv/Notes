@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="fragment_title">50sp</dimen>
+    <dimen name="fragment_title_small">20sp</dimen>
+    <dimen name="fragment_title_medium">40sp</dimen>
+    <dimen name="folder_items_margin">10dp</dimen>
+</resources>
