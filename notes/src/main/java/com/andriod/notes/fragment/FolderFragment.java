@@ -2,6 +2,7 @@ package com.andriod.notes.fragment;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -21,19 +22,26 @@ import com.andriod.notes.R;
 public class FolderFragment extends Fragment {
 
     private static final int ADD_FOLDER_MENU_ITEM_ID = View.generateViewId();
+    private static final String TAG = "@FolderFragment@";
     private MainActivity mainActivity;
     private LinearLayout listContainer;
     private Controller controller;
 
+    public FolderFragment() {
+        Log.d(TAG, "FolderFragment() called");
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        Log.d(TAG, "onCreate() called with: savedInstanceState = [" + savedInstanceState + "]");
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
+        Log.d(TAG, "onAttach() called with: context = [" + context + "]");
         super.onAttach(context);
         mainActivity = (MainActivity) context;
         controller = (Controller) context;
@@ -41,6 +49,7 @@ public class FolderFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Log.d(TAG, "onCreateView() called");
         return inflater.inflate(R.layout.fragment_folder, container, false);
     }
 
@@ -56,10 +65,13 @@ public class FolderFragment extends Fragment {
             textView.setOnClickListener(v -> controller.folderPicked(index));
             listContainer.addView(textView);
         }
+
+        controller.setBottomMenu(MainActivity.FragmentType.FoldersList);
     }
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        menu.clear();
         MenuItem item = menu.add(Menu.NONE, ADD_FOLDER_MENU_ITEM_ID, 1, "Add folder");
         item.setIcon(R.drawable.ic_create_new_folder_24);
         item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);

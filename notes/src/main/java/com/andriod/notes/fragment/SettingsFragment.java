@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.andriod.notes.MainActivity;
 import com.andriod.notes.R;
 
 public class SettingsFragment extends Fragment {
@@ -31,11 +32,8 @@ public class SettingsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        view.findViewById(R.id.button_delete_all).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                controller.deleteAll();
-            }
-        });
+        view.findViewById(R.id.button_delete_all).setOnClickListener(v -> controller.deleteAll());
+
+        controller.setBottomMenu(MainActivity.FragmentType.Settings);
     }
 }
