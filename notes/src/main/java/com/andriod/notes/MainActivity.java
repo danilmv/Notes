@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -31,6 +32,7 @@ public class MainActivity extends AppCompatActivity implements Controller {
     private static final String SAVE_DATA = "data";
     public static final String FAVORITES = "FAVORITES\n##";
     public static final String SEARCH_RESULTS = "SEARCH_RESULTS\n##";
+    private static final String SHARED_KEY = "SharedPreferences";
 
     private static class ApplicationData {
         private final List<String> folders = new ArrayList<>();
@@ -85,7 +87,8 @@ public class MainActivity extends AppCompatActivity implements Controller {
         });
 
         if (savedInstanceState == null) {
-            data = new ApplicationData();
+            data = loadDataFromPreferences();
+            if (data == null) data = new ApplicationData();
         } else {
             restoreData(savedInstanceState);
         }
@@ -209,7 +212,11 @@ public class MainActivity extends AppCompatActivity implements Controller {
                 break;
 
             case NotesList:
-                fragment = ListNotesFragment.newInstance((String) more);
+                if (more != null) {
+                    fragment = ListNotesFragment.newInstance((String) more);
+                } else {
+                    fragment = ListNotesFragment.newInstance(data.currentFolder);
+                }
                 break;
 
             case Settings:
@@ -331,13 +338,48 @@ public class MainActivity extends AppCompatActivity implements Controller {
     }
 
     private void restoreData(Bundle savedInstanceState) {
-        if (savedInstanceState.containsKey(SAVE_DATA))
-            data = gson.fromJson(savedInstanceState.getString(SAVE_DATA), ApplicationData.class);
+        if (savedInstanceState.containsKey(SAVE_DATA)) {
+            data = stringToData(savedInstanceState.getString(SAVE_DATA));
+        }
     }
 
     @Override
     public void onBackPressed() {
         Log.d(TAG, "onBackPressed() called");
         super.onBackPressed();
+    }
+
+    @Override
+    protected void onStop() {
+        Log.d(TAG, "onStop() called");
+        super.onStop();
+
+        getSharedPreferences(SHARED_KEY, MODE_PRIVATE)
+                .edit()
+                .putString(SAVE_DATA, dataToString())
+                .apply();
+    }
+
+    private ApplicationData stringToData(String stringData) {
+        if (stringData == null || stringData.isEmpty()) return null;
+
+        ApplicationData data = gson.fromJson(stringData, ApplicationData.class);
+
+        if (data.currentFragment == FragmentType.NoteCreate) {
+            data.currentFragment = FragmentType.NotesList;
+        } else if (data.currentFragment == FragmentType.FolderCreate) {
+            data.currentFragment = FragmentType.FoldersList;
+        }
+
+        return data;
+    }
+
+    private ApplicationData loadDataFromPreferences() {
+        SharedPreferences preferences = getSharedPreferences(SHARED_KEY, MODE_PRIVATE);
+        if (preferences == null) return null;
+        String stringData = preferences.getString(SAVE_DATA, null);
+        if (stringData == null || stringData.isEmpty()) return null;
+
+        return stringToData(stringData);
     }
 }

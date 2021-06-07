@@ -2,6 +2,8 @@ package com.andriod.notes.fragment;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.text.Editable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,18 +19,19 @@ import com.google.android.material.textfield.TextInputEditText;
 
 public class NoteCreateFragment extends Fragment {
     private static final String NOTE_KEY = "note";
+    private static final String TAG = "@NoteCreateFragment@";
     private Note note;
     private TextInputEditText editTextHeader;
     private Controller controller;
 
-    public static NoteCreateFragment newInstance(Note note){
+    public static NoteCreateFragment newInstance(Note note) {
         NoteCreateFragment noteCreateFragment = new NoteCreateFragment();
         noteCreateFragment.setArguments(note);
 
         return noteCreateFragment;
     }
 
-    public void setArguments(Note note){
+    public void setArguments(Note note) {
         Bundle data = new Bundle();
         data.clear();
         data.putParcelable(NOTE_KEY, note);
@@ -38,7 +41,7 @@ public class NoteCreateFragment extends Fragment {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        controller = (Controller)context;
+        controller = (Controller) context;
     }
 
     @Override
@@ -46,7 +49,7 @@ public class NoteCreateFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         Bundle data = getArguments();
-        if (data!=null) this.note = (Note)data.getParcelable(NOTE_KEY);
+        if (data != null) this.note = (Note) data.getParcelable(NOTE_KEY);
     }
 
     @Nullable
@@ -65,9 +68,10 @@ public class NoteCreateFragment extends Fragment {
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
-
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        Log.d(TAG, "onSaveInstanceState() called with: outState = [" + outState + "]");
+        super.onSaveInstanceState(outState);
         note.setHeader(editTextHeader.getText().toString());
     }
+
 }
