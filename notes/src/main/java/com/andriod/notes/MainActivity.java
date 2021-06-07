@@ -14,6 +14,7 @@ import com.andriod.notes.fragment.FolderAddNewFragment;
 import com.andriod.notes.fragment.FolderFragment;
 import com.andriod.notes.fragment.ListNotesFragment;
 import com.andriod.notes.fragment.NoteCreateFragment;
+import com.andriod.notes.fragment.SettingsFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.gson.Gson;
 
@@ -51,7 +52,6 @@ public class MainActivity extends AppCompatActivity implements Controller {
         }
 
         bottomNavigationView = findViewById(R.id.bottom_view);
-        bottomNavigationView.getMenu().findItem(R.id.menu_bottom_item_settings).setEnabled(false);
 
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
             int itemId = item.getItemId();
@@ -72,6 +72,11 @@ public class MainActivity extends AppCompatActivity implements Controller {
     }
 
     private void showSettings() {
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.container, new SettingsFragment())
+                .addToBackStack(null)
+                .commit();
     }
 
     private void setBottomMenu(int checkedId) {
@@ -173,6 +178,15 @@ public class MainActivity extends AppCompatActivity implements Controller {
                 .replace(R.id.container, NoteCreateFragment.newInstance(newNote))
                 .addToBackStack(null)
                 .commit();
+    }
+
+    @Override
+    public void deleteAll() {
+        data.folders.clear();
+        data.currentFolderNotes.clear();
+        data.notes.clear();
+
+        showFoldersFragment();
     }
 
     @Override

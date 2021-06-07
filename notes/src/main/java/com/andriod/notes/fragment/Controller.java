@@ -6,4 +6,5 @@ public interface Controller {
     void folderAddNewResult(String newFolderName);
     void notePicked(int index);
     void noteAddNew(String folder);
+    void deleteAll();
 }
