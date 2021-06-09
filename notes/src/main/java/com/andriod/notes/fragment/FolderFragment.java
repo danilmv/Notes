@@ -71,15 +71,16 @@ public class FolderFragment extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        menu.clear();
+        Log.d(TAG, String.format("onCreateOptionsMenu() called with: menu = %s", menu));
+        super.onCreateOptionsMenu(menu, inflater);
         MenuItem item = menu.add(Menu.NONE, ADD_FOLDER_MENU_ITEM_ID, 1, "Add folder");
         item.setIcon(R.drawable.ic_create_new_folder_24);
         item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-        super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        Log.d(TAG, String.format("onOptionsItemSelected() called with: item = %s", item));
         if (item.getItemId() == ADD_FOLDER_MENU_ITEM_ID) {
             controller.folderAddNew();
             return true;

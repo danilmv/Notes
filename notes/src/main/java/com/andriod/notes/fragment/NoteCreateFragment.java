@@ -74,4 +74,9 @@ public class NoteCreateFragment extends Fragment {
         note.setHeader(editTextHeader.getText().toString());
     }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        note.setHeader(editTextHeader.getText().toString());
+    }
 }

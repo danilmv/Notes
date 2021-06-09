@@ -10,4 +10,6 @@
     <string name="favorites">favorites</string>
     <string name="settings">settings</string>
     <string name="favorites_folder_title">Favorites</string>
+    <string name="search_folder_title">Search</string>
+    <string name="search">Search</string>
 </resources>

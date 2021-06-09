@@ -3,7 +3,9 @@ package com.andriod.notes;
 import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.content.SharedPreferences;
@@ -49,7 +51,12 @@ public class MainActivity extends AppCompatActivity implements Controller {
     private BottomNavigationView bottomNavigationView;
 
     public enum FragmentType {
-        FoldersList(true), FolderCreate(false), NotesList(true), NoteCreate(false), Settings(true);
+        FoldersList(true),
+        FolderCreate(false),
+        NotesList(true),
+        NoteCreate(false),
+        Settings(true),
+        Search(false);
         private final boolean returnable;
 
         FragmentType(boolean returnable) {
@@ -95,6 +102,23 @@ public class MainActivity extends AppCompatActivity implements Controller {
 
         if (data.currentFragment == null) data.currentFragment = FragmentType.FoldersList;
 
+        getSupportFragmentManager().addOnBackStackChangedListener(() -> {
+            int count = getSupportFragmentManager().getBackStackEntryCount();
+            Log.d(TAG, String.format("!!!!ADD: onBackStackChanged() called: %d", count));
+            for (int i = 0; i < count; i++) {
+                Log.d(TAG, String.format("\t\tbackSTack[%d]: %s", i, getSupportFragmentManager().getBackStackEntryAt(i).getName()));
+            }
+        });
+
+        getSupportFragmentManager().removeOnBackStackChangedListener(() -> {
+            int count = getSupportFragmentManager().getBackStackEntryCount();
+            Log.d(TAG, String.format("!!!!REMOVE: onBackStackChanged() called: %d", count));
+            for (int i = 0; i < count; i++) {
+                Log.d(TAG, String.format("\t\tbackSTack[%d]: %s", i, getSupportFragmentManager().getBackStackEntryAt(i).getName()));
+            }
+        });
+
+
         updateScreen(R.id.container, data.currentFragment);
     }
 
@@ -121,6 +145,7 @@ public class MainActivity extends AppCompatActivity implements Controller {
                 visibility = View.GONE;
                 break;
 
+            case Search:
             case NotesList:
                 if (data.currentFolder.equals(FAVORITES))
                     checkedId = R.id.menu_bottom_item_favorites;
@@ -182,6 +207,10 @@ public class MainActivity extends AppCompatActivity implements Controller {
         updateScreen(R.id.container, FragmentType.NotesList, pickedFolder);
     }
 
+    private void showSearchContent(String query) {
+        updateScreen(R.id.container, FragmentType.Search, query);
+    }
+
     private void updateScreen(@IdRes int containerViewId, FragmentType fragmentType) {
         updateScreen(containerViewId, fragmentType, null, false);
     }
@@ -211,6 +240,7 @@ public class MainActivity extends AppCompatActivity implements Controller {
                 fragment = NoteCreateFragment.newInstance((Note) more);
                 break;
 
+            case Search:
             case NotesList:
                 if (more != null) {
                     fragment = ListNotesFragment.newInstance((String) more);
@@ -227,13 +257,16 @@ public class MainActivity extends AppCompatActivity implements Controller {
                 return;
         }
 
+        Log.d(TAG, String.format("updateScreen() called with #switch to [%s]", fragmentType));
+
         if (goBack) {
             getSupportFragmentManager().popBackStack();
         } else {
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             transaction.replace(containerViewId, fragment);
             if (data.currentFragment != fragmentType && data.currentFragment.isReturnable()) {
-                transaction.addToBackStack(null);
+                transaction.addToBackStack(data.currentFragment.name());
+                Log.d(TAG, String.format("updateScreen() called with #addToBackStack: [%s]", data.currentFragment.name()));
             }
             transaction.commit();
         }
@@ -284,33 +317,33 @@ public class MainActivity extends AppCompatActivity implements Controller {
         showFoldersFragment();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        return super.onCreateOptionsMenu(menu);
-    }
-
     public List<Note> getNotesInFolder(String folder) {
         if (!folder.equals(data.currentFolder)) {
             data.currentFolder = folder;
             data.currentFolderNotes = new ArrayList<>();
 
-            switch (folder) {
-                case FAVORITES:
+            if (folder.startsWith(FAVORITES)) {
+                for (Note note : data.notes) {
+                    if (note.isFavorite()) {
+                        data.currentFolderNotes.add(note);
+                    }
+                }
+            } else if (folder.startsWith(SEARCH_RESULTS)) {
+                String query = folder.substring(SEARCH_RESULTS.length());
+                if (!query.isEmpty()) {
+                    Log.d(TAG, String.format("getNotesInFolder() SEARCHING with %s", query));
                     for (Note note : data.notes) {
-                        if (note.isFavorite()) {
+                        if (note.checkSearch(query)) {
                             data.currentFolderNotes.add(note);
                         }
                     }
-                    break;
-                case SEARCH_RESULTS:
-                    break;
-                default:
-                    for (Note note : data.notes) {
-                        if (note.getFolder().equals(data.currentFolder)) {
-                            data.currentFolderNotes.add(note);
-                        }
+                }
+            } else {
+                for (Note note : data.notes) {
+                    if (note.getFolder().equals(data.currentFolder)) {
+                        data.currentFolderNotes.add(note);
                     }
-                    break;
+                }
             }
         }
 
@@ -381,5 +414,52 @@ public class MainActivity extends AppCompatActivity implements Controller {
         if (stringData == null || stringData.isEmpty()) return null;
 
         return stringToData(stringData);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        Log.d(TAG, "onCreateOptionsMenu() called with: menu = [" + menu + "]");
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        MenuItem item = menu.findItem(R.id.menu_main_item_search);
+
+        SearchView searchView = (SearchView) item.getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                Log.d(TAG, "onQueryTextSubmit() called with: query = [" + query + "]");
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                Log.d(TAG, "onQueryTextChange() called with: newText = [" + newText + "]");
+                if (newText.isEmpty()) return true;
+                showSearchContent(String.format("%s%s", SEARCH_RESULTS, newText));
+                return true;
+            }
+        });
+
+        searchView.setOnCloseListener(() -> {
+            Log.d(TAG, "onClose() called");
+            getSupportFragmentManager().popBackStack();
+            return false;
+        });
+
+        item.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                Log.d(TAG, "onMenuItemActionExpand() called with: item = [" + item + "]");
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                Log.d(TAG, "onMenuItemActionCollapse() called with: item = [" + item + "]");
+                getSupportFragmentManager().popBackStack();
+                return true;
+            }
+        });
+
+        return true;
     }
 }

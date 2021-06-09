@@ -31,6 +31,8 @@ public class ListNotesFragment extends Fragment {
     private MainActivity mainActivity;
     private Controller controller;
 
+    private MainActivity.FragmentType fragmentType = MainActivity.FragmentType.NotesList;
+
     public static ListNotesFragment newInstance(String folderName) {
         ListNotesFragment fragment = new ListNotesFragment();
         fragment.setArguments(folderName);
@@ -75,10 +77,20 @@ public class ListNotesFragment extends Fragment {
         Bundle fragmentData = getArguments();
         if (fragmentData != null) this.folderName = fragmentData.getString(FOLDER_NAME_KEY);
 
-        setHasOptionsMenu(!folderName.equals(MainActivity.FAVORITES));
+        boolean isFavorites = folderName.startsWith(MainActivity.FAVORITES);
+        boolean isSearch = folderName.startsWith(MainActivity.SEARCH_RESULTS);
+        if (isSearch)fragmentType = MainActivity.FragmentType.Search;
 
+        setHasOptionsMenu(!(isFavorites || isSearch));
         TextView textViewFolderName = view.findViewById(R.id.text_view_folder_name);
-        textViewFolderName.setText(folderName.equals(MainActivity.FAVORITES) ? getString(R.string.favorites_folder_title) : folderName);
+
+        if (isFavorites){
+            textViewFolderName.setText(getString(R.string.favorites_folder_title));
+        }else if(isSearch){
+            textViewFolderName.setText(getString(R.string.search_folder_title));
+        }else{
+            textViewFolderName.setText(folderName);
+        }
 
         List<Note> notes = mainActivity.getNotesInFolder(folderName);
 
@@ -93,20 +105,21 @@ public class ListNotesFragment extends Fragment {
             textView.setOnClickListener(v -> controller.notePicked(index));
             listContainer.addView(textView);
         }
-        controller.setBottomMenu(MainActivity.FragmentType.NotesList);
+        controller.setBottomMenu(fragmentType);
     }
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        menu.clear();
+        Log.d(TAG, "onCreateOptionsMenu() called with: menu = [" + menu + "], inflater = [" + inflater + "]");
         MenuItem item = menu.add(Menu.NONE, ADD_NOTE_MENU_ITEM_ID, 1, "Add Note");
-        item.setIcon(R.drawable.ic_create_new_note_24);
+        item.setIcon(R.drawable.ic_create_new_note2_24);
         item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        Log.d(TAG, "onOptionsItemSelected() called with: item = [" + item + "]");
         if (item.getItemId() == ADD_NOTE_MENU_ITEM_ID) {
             controller.noteAddNew(folderName);
             return true;
