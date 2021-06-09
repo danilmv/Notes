@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.andriod.notes.MainActivity;
 import com.andriod.notes.R;
 
 public class FolderAddNewFragment extends Fragment {
@@ -45,7 +46,10 @@ public class FolderAddNewFragment extends Fragment {
                         Toast.makeText(getContext(), "Enter folder name, please.", Toast.LENGTH_SHORT).show();
                     } else {
                         controller.folderAddNewResult(folderName);
+                        editTextFolderName.setText("");
                     }
                 });
+
+        controller.setBottomMenu(MainActivity.FragmentType.FolderCreate);
     }
 }

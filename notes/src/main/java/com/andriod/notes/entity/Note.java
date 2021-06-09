@@ -106,4 +106,9 @@ public class Note implements Parcelable {
     public Content getContent(int index){
         return content.get(index);
     }
+
+    public boolean checkSearch(String query){
+        if (header==null || header.isEmpty()) return false;
+        return header.contains(query);
+    }
 }
